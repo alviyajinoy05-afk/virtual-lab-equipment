@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Virtual Pacemaker Lab — Interactive Learning</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #070c18;
+  --surface: #0e1624;
+  --surface2: #152035;
+  --border: #1d2d46;
+  --accent: #38bdf8;
+  --accent2: #34d399;
+  --accent3: #f87171;
+  --warn: #fbbf24;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --heart: #e53e3e;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:60px;
+  background:rgba(7,12,24,.85);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;
+}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-brand-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,#e53e3e,#c53030);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.nav-brand-text{font-size:15px;font-weight:600;color:var(--text)}
+.nav-brand-sub{font-size:11px;color:var(--muted);font-weight:300}
+.nav-links{display:flex;gap:6px}
+.nav-link{
+  padding:7px 16px;border-radius:8px;font-size:13px;font-weight:500;
+  cursor:pointer;border:none;background:transparent;color:var(--muted);
+  transition:all .2s;text-decoration:none;display:flex;align-items:center;
+}
+.nav-link:hover,.nav-link.active{background:var(--surface2);color:var(--accent)}
+.nav-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 12px;border-radius:20px;
+  background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.25);
+  font-size:11px;color:var(--accent);font-weight:500;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:blink 1.4s ease infinite}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:100px 24px 60px;
+  background:radial-gradient(ellipse 80% 60% at 50% 40%, rgba(56,189,248,.07) 0%, transparent 70%);
+  position:relative;overflow:hidden;
+}
+.hero-bg-heart{
+  position:absolute;right:-120px;top:50%;transform:translateY(-50%);
+  width:500px;height:500px;opacity:.04;pointer-events:none;
+}
+.hero-eyebrow{
+  font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--accent);
+  text-transform:uppercase;margin-bottom:20px;
+  display:flex;align-items:center;gap:8px;
+}
+.hero-title{
+  font-size:clamp(36px,6vw,72px);font-weight:300;line-height:1.1;
+  text-align:center;max-width:780px;margin-bottom:20px;
+}
+.hero-title em{font-style:normal;color:var(--accent)}
+.hero-sub{
+  font-size:16px;color:var(--muted);text-align:center;max-width:520px;
+  line-height:1.7;margin-bottom:40px;
+}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.btn-primary{
+  padding:13px 28px;border-radius:10px;font-size:14px;font-weight:600;
+  background:var(--accent);color:#000;border:none;cursor:pointer;
+  transition:all .2s;font-family:'Inter',sans-serif;
+}
+.btn-primary:hover{background:#7dd3fc;transform:translateY(-1px)}
+.btn-outline{
+  padding:13px 28px;border-radius:10px;font-size:14px;font-weight:500;
+  background:transparent;color:var(--text);border:1px solid var(--border);
+  cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;
+}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── ECG TICKER ── */
+.ecg-ticker{
+  width:100%;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:12px 32px;display:flex;align-items:center;gap:20px;margin-top:48px;
+}
+#ecg-mini{flex:1;height:44px}
+.ticker-stat{display:flex;flex-direction:column;align-items:center;min-width:60px}
+.ticker-val{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:500;color:var(--accent2)}
+.ticker-unit{font-size:10px;color:var(--muted)}
+
+/* ── SECTIONS ── */
+.section{padding:80px 32px;max-width:1100px;margin:0 auto}
+.section-title{
+  font-size:clamp(24px,4vw,40px);font-weight:300;margin-bottom:8px;
+}
+.section-sub{font-size:14px;color:var(--muted);margin-bottom:48px;line-height:1.6}
+hr.divider{border:none;border-top:1px solid var(--border);margin:0}
+
+/* ── 3D LAB ── */
+#section-lab{max-width:100%;padding:60px 0 0}
+.lab-wrap{display:grid;grid-template-columns:300px 1fr 260px;height:calc(100vh - 200px);min-height:500px}
+.lab-panel{border-right:1px solid var(--border);padding:20px;overflow-y:auto}
+.lab-panel:last-child{border-right:none}
+.panel-head{
+  font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);
+  text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);
+}
+
+/* Canvas */
+.canvas-area{
+  background:radial-gradient(ellipse at center,#0c1526 0%,var(--bg) 100%);
+  position:relative;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;overflow:hidden;
+}
+#heart-canvas{width:100%;height:100%}
+.view-bar{
+  position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  display:flex;gap:6px;
+}
+.vbtn{
+  padding:6px 14px;background:rgba(14,22,36,.85);border:1px solid var(--border);
+  border-radius:6px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .2s;
+  font-family:'Inter',sans-serif;backdrop-filter:blur(6px);
+}
+.vbtn:hover,.vbtn.active{border-color:var(--accent);color:var(--accent);background:rgba(56,189,248,.1)}
+.canvas-label{position:absolute;top:14px;left:16px;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+
+/* controls */
+.ctrl-group{margin-bottom:18px}
+.ctrl-lbl{font-size:12px;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between}
+.ctrl-val{color:var(--accent);font-family:'JetBrains Mono',monospace}
+input[type=range]{width:100%;-webkit-appearance:none;height:3px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;margin-top:4px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);cursor:pointer}
+
+.mode-btn{
+  width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;cursor:pointer;text-align:left;transition:all .2s;
+  color:var(--text);font-family:'Inter',sans-serif;margin-bottom:6px;
+}
+.mode-btn:hover{border-color:var(--accent)}
+.mode-btn.active{border-color:var(--accent);background:rgba(56,189,248,.08)}
+.mode-btn-n{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:2px}
+.mode-btn-d{font-size:10px;color:var(--muted)}
+
+/* readings */
+.readings-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px}
+.rd{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px}
+.rd-name{font-size:10px;color:var(--muted);margin-bottom:3px}
+.rd-val{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:500}
+.ok{color:var(--accent2)}.warn{color:var(--warn)}.alert{color:var(--accent3)}
+
+/* signal steps */
+.sig-flow{display:flex;flex-direction:column;gap:5px}
+.sig-step{
+  display:flex;align-items:center;gap:8px;padding:7px 9px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:7px;transition:all .3s;
+}
+.sig-step.lit{border-color:var(--accent);background:rgba(56,189,248,.07)}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0;transition:all .3s}
+.sig-step.lit .sdot{background:var(--accent);box-shadow:0 0 7px var(--accent)}
+.stxt{font-size:10px;color:var(--muted)}
+.sig-step.lit .stxt{color:var(--text)}
+.sarrow{text-align:center;color:var(--border);font-size:10px;line-height:1.2}
+
+/* ── THEORY CARDS ── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px}
+.card-title{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.card-body{font-size:13px;color:var(--muted);line-height:1.7}
+.tag{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:4px;font-size:10px;font-weight:500;
+  font-family:'JetBrains Mono',monospace;margin-top:8px;
+}
+.tag-blue{background:rgba(56,189,248,.15);color:var(--accent)}
+.tag-green{background:rgba(52,211,153,.15);color:var(--accent2)}
+.tag-red{background:rgba(248,113,113,.15);color:var(--accent3)}
+
+/* block diagram */
+.bdiag{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-top:20px}
+.bdiag-title{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+
+/* ── AI ASSISTANT ── */
+#section-ai{padding:80px 32px;max-width:840px;margin:0 auto}
+.ai-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.ai-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.ai-avatar{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,#38bdf8,#0ea5e9);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+}
+.ai-name{font-size:14px;font-weight:600}
+.ai-desc{font-size:12px;color:var(--muted)}
+.ai-messages{padding:20px 24px;min-height:320px;max-height:480px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:10px;align-items:flex-start}
+.msg.user{flex-direction:row-reverse}
+.msg-bubble{
+  max-width:75%;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.6;
+}
+.msg.assistant .msg-bubble{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+.msg.user .msg-bubble{background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.25);color:var(--text)}
+.msg-av{
+  width:30px;height:30px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+.msg.assistant .msg-av{background:linear-gradient(135deg,#38bdf8,#0ea5e9)}
+.msg.user .msg-av{background:var(--surface2);border:1px solid var(--border)}
+.ai-input-row{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px}
+.ai-input{
+  flex:1;padding:11px 16px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;font-size:13px;color:var(--text);font-family:'Inter',sans-serif;outline:none;
+  transition:border-color .2s;
+}
+.ai-input:focus{border-color:var(--accent)}
+.ai-input::placeholder{color:var(--muted)}
+.ai-send{
+  padding:11px 20px;background:var(--accent);color:#000;border:none;
+  border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:'Inter',sans-serif;transition:all .2s;white-space:nowrap;
+}
+.ai-send:hover:not(:disabled){background:#7dd3fc}
+.ai-send:disabled{opacity:.5;cursor:not-allowed}
+.ai-chips{padding:0 24px 14px;display:flex;gap:7px;flex-wrap:wrap}
+.chip{
+  padding:5px 12px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:20px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .2s;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.typing-indicator{display:flex;gap:5px;align-items:center;padding:10px 14px}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+.typing-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:bounce 1.2s ease infinite}
+.typing-dot:nth-child(2){animation-delay:.15s}
+.typing-dot:nth-child(3){animation-delay:.3s}
+
+/* ── QUIZ ── */
+.quiz-wrap{max-width:640px;margin:0 auto}
+.qcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:14px}
+.qnum{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.qtext{font-size:14px;line-height:1.5;margin-bottom:14px}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{
+  padding:10px 14px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;font-size:13px;cursor:pointer;transition:all .2s;
+  color:var(--text);text-align:left;font-family:'Inter',sans-serif;
+}
+.qopt:hover:not(:disabled){border-color:var(--accent)}
+.qopt.correct{border-color:var(--accent2)!important;background:rgba(52,211,153,.1);color:var(--accent2)}
+.qopt.wrong{border-color:var(--accent3)!important;background:rgba(248,113,113,.1);color:var(--accent3)}
+.qfeedback{font-size:12px;color:var(--muted);margin-top:10px;padding:10px 12px;background:var(--surface2);border-radius:7px;display:none}
+.score-card{text-align:center;padding:40px 24px;background:var(--surface);border:1px solid var(--border);border-radius:16px;display:none}
+.score-big{font-size:56px;font-weight:300;color:var(--accent);line-height:1}
+.score-lbl{font-size:15px;color:var(--muted);margin-top:6px}
+.score-msg{font-size:13px;color:var(--text);margin-top:14px;max-width:320px;margin-left:auto;margin-right:auto}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--surface);border-top:1px solid var(--border);
+  padding:40px 32px;text-align:center;
+}
+footer p{font-size:12px;color:var(--muted);line-height:1.7}
+footer a{color:var(--accent);text-decoration:none}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── RANGE BAR ── */
+.range-wrap{
+  max-width:1100px;margin:0 auto;padding:0 32px 28px;
+}
+.range-header{
+  display:flex;align-items:center;gap:14px;margin-bottom:12px;flex-wrap:wrap;
+}
+.range-title{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.status-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;
+  transition:all .4s ease;
+}
+.pill-normal{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);color:var(--accent2)}
+.pill-arrhythmia{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.35);color:var(--accent3)}
+.pill-pacing{background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:var(--accent)}
+.pill-correcting{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:var(--warn)}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.2s ease infinite}
+
+.range-bar-outer{
+  position:relative;height:28px;border-radius:14px;overflow:visible;
+  background:linear-gradient(to right,
+    #3b0a14 0%,#7f1d1d 12%,
+    #0d2a0d 18%,#14532d 55%,
+    #451a03 65%,#78350f 85%,
+    #3b0a14 100%);
+}
+.range-zones-row{
+  display:flex;justify-content:space-between;
+  font-size:9.5px;color:var(--muted);margin-top:5px;padding:0 2px;
+}
+.rz{text-align:center;line-height:1.3}
+.rz.ok{color:var(--accent2);font-weight:600}
+.rz.bad{color:var(--accent3);font-weight:600}
+.rz.warn{color:var(--warn);font-weight:600}
+
+.hr-needle{
+  position:absolute;top:-5px;bottom:-5px;width:3px;border-radius:2px;
+  background:#fff;box-shadow:0 0 10px rgba(255,255,255,.85);
+  transform:translateX(-50%);transition:left .7s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+.hr-needle::after{
+  content:attr(data-label);
+  position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.8);color:#fff;font-size:9px;font-weight:700;
+  padding:2px 6px;border-radius:4px;white-space:nowrap;
+  font-family:'JetBrains Mono',monospace;
+}
+.range-legend{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap}
+.rleg{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--muted)}
+.rleg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ── PACEMAKER TOGGLE ROW ── */
+.pacer-row{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:14px;padding:10px 12px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+}
+.pacer-row-lbl{font-size:11px;color:var(--muted);font-weight:500;flex:1}
+.toggle-sw{position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;flex-shrink:0}
+.toggle-sw input{opacity:0;width:0;height:0}
+.toggle-track{
+  position:absolute;inset:0;border-radius:11px;
+  background:var(--border);transition:background .3s;
+}
+.toggle-sw input:checked~.toggle-track{background:var(--accent)}
+.toggle-thumb{
+  position:absolute;left:3px;top:3px;width:16px;height:16px;
+  border-radius:50%;background:#fff;transition:transform .3s;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+.toggle-sw input:checked~.toggle-track~.toggle-thumb{transform:translateX(18px)}
+.pacer-on-lbl{font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.pacer-on-lbl.on{color:var(--accent)}.pacer-on-lbl.off{color:var(--muted)}
+
+/* ── CORRECTION PANEL ── */
+.corr-panel{
+  margin-top:12px;padding:12px;
+  background:rgba(56,189,248,.06);
+  border:1px solid rgba(56,189,248,.2);
+  border-radius:8px;font-size:12px;line-height:1.6;
+  display:none;
+}
+.corr-panel.visible{display:block}
+.corr-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.corr-box{
+  flex:1;text-align:center;padding:8px 10px;border-radius:7px;min-width:80px;
+}
+.corr-box.before{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25)}
+.corr-box.after{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2)}
+.corr-box .cb-lbl{font-size:9px;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.06em}
+.corr-box .cb-val{font-size:18px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.corr-box.before .cb-val{color:var(--accent3)}
+.corr-box.after .cb-val{color:var(--accent2)}
+.corr-arr{font-size:18px;color:var(--accent);flex-shrink:0}
+.corr-desc{font-size:11px;color:var(--muted);line-height:1.6}
+.corr-live-bpm{
+  margin-top:6px;display:flex;align-items:center;gap:8px;
+  font-size:11px;color:var(--muted);
+}
+.corr-bpm-bar{
+  flex:1;height:5px;border-radius:3px;background:var(--border);overflow:hidden;
+}
+.corr-bpm-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .6s ease}
+.corr-bpm-txt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);min-width:52px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:880px){
+  .lab-wrap{grid-template-columns:1fr;height:auto}
+  .canvas-area{height:380px}
+  .lab-panel:first-child,.lab-panel:last-child{border-right:none;border-bottom:1px solid var(--border)}
+  .nav-links .nav-link span{display:none}
+}
+@media(max-width:600px){
+  nav{padding:0 16px}
+  .section{padding:60px 16px}
+  .hero-actions{flex-direction:column;width:100%}
+  .btn-primary,.btn-outline{width:100%;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#hero">
+    <div class="nav-brand-icon">❤️</div>
+    <div>
+      <div class="nav-brand-text">PacemakerLab</div>
+      <div class="nav-brand-sub">Virtual Learning Platform</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link active" href="#section-lab" onclick="setNavActive(this)"><span>3D Lab</span></a>
+    <a class="nav-link" href="#section-theory" onclick="setNavActive(this)"><span>Theory</span></a>
+    <a class="nav-link" href="#section-ai" onclick="setNavActive(this)"><span>AI Tutor</span></a>
+    <a class="nav-link" href="#section-quiz" onclick="setNavActive(this)"><span>Quiz</span></a>
+  </div>
+  <div class="nav-badge"><div class="live-dot"></div>Live Simulation</div>
+</nav>
+
+<!-- HERO -->
+<div id="hero" class="hero">
+  <div class="hero-eyebrow"><span>⚡</span> Ex. No. 2 — Biomedical Instrumentation</div>
+  <h1 class="hero-title">
+    How a <em>Cardiac Pacemaker</em><br>Keeps You Alive
+  </h1>
+  <p class="hero-sub">
+    An interactive virtual lab with 3D heart simulation, live ECG, AI-powered Q&A, and hands-on pacemaker controls — built from your lab exercise.
+  </p>
+  <div class="hero-actions">
+    <button class="btn-primary" onclick="document.getElementById('section-lab').scrollIntoView({behavior:'smooth'})">Open 3D Lab →</button>
+    <button class="btn-outline" onclick="document.getElementById('section-ai').scrollIntoView({behavior:'smooth'})">Ask AI Tutor</button>
+  </div>
+
+  <!-- Live ECG bar -->
+  <div class="ecg-ticker">
+    <span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap">LIVE ECG</span>
+    <canvas id="ecg-mini"></canvas>
+    <div class="ticker-stat"><div class="ticker-val" id="bpm-display">72</div><div class="ticker-unit">BPM</div></div>
+    <div class="ticker-stat"><div class="ticker-val" id="volt-display" style="color:var(--accent)">5.0</div><div class="ticker-unit">Volts</div></div>
+    <div class="ticker-stat"><div class="ticker-val" style="color:var(--warn)">250</div><div class="ticker-unit">ms Refract</div></div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ─── 3D LAB ─── -->
+<div id="section-lab" style="padding:60px 0 0">
+  <div style="padding:0 32px 28px;max-width:1100px;margin:0 auto">
+    <h2 class="section-title">Interactive 3D Lab</h2>
+    <p class="section-sub" style="margin-bottom:0">Adjust pacemaker parameters and observe real-time effects on the animated heart model.</p>
+  </div>
+
+  <!-- ── RANGE BAR ── -->
+  <div class="range-wrap">
+    <div class="range-header">
+      <span class="range-title">Heart Rate Range</span>
+      <span class="status-pill pill-normal" id="status-pill"><span class="pill-dot"></span><span id="pill-txt">Normal Sinus Rhythm</span></span>
+    </div>
+    <div class="range-bar-outer">
+      <div class="hr-needle" id="hr-needle" data-label="72 BPM" style="left:33%"></div>
+    </div>
+    <div class="range-zones-row">
+      <div class="rz bad">Extreme<br>&lt;40</div>
+      <div class="rz bad">Brady<br>40–59</div>
+      <div class="rz ok">Normal<br>60–100</div>
+      <div class="rz warn">Tachy<br>101–150</div>
+      <div class="rz bad">Extreme<br>&gt;150</div>
+    </div>
+    <div class="range-legend">
+      <div class="rleg"><div class="rleg-dot" style="background:#7f1d1d"></div>Bradycardia / Extreme (&lt;60 BPM)</div>
+      <div class="rleg"><div class="rleg-dot" style="background:#14532d"></div>Normal Sinus (60–100 BPM)</div>
+      <div class="rleg"><div class="rleg-dot" style="background:#78350f"></div>Tachycardia (&gt;100 BPM)</div>
+      <div class="rleg"><div class="rleg-dot" style="background:#38bdf8"></div>Pacemaker Correcting</div>
+    </div>
+  </div>
+
+  <div class="lab-wrap">
+
+    <!-- LEFT CONTROLS -->
+    <div class="lab-panel">
+      <div class="panel-head">Pacemaker Mode</div>
+      <button class="mode-btn active" id="mb-demand" onclick="setMode('demand')">
+        <div class="mode-btn-n">Demand</div>
+        <div class="mode-btn-d">Fires only when rate drops below threshold</div>
+      </button>
+      <button class="mode-btn" id="mb-fixed" onclick="setMode('fixed')">
+        <div class="mode-btn-n">Fixed-Rate</div>
+        <div class="mode-btn-d">Constant pacing regardless of natural rhythm</div>
+      </button>
+      <button class="mode-btn" id="mb-rr" onclick="setMode('rr')">
+        <div class="mode-btn-n">Rate-Responsive</div>
+        <div class="mode-btn-d">Sensor-adjusted to activity level</div>
+      </button>
+
+      <div class="panel-head" style="margin-top:16px">Parameters</div>
+      <div class="ctrl-group">
+        <div class="ctrl-lbl">Pacing Rate <span class="ctrl-val" id="lbl-rate">72 BPM</span></div>
+        <input type="range" min="30" max="150" value="72" id="sl-rate" oninput="onRate(this.value)">
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-lbl">Pulse Width <span class="ctrl-val" id="lbl-pw">1.0 ms</span></div>
+        <input type="range" min="1" max="21" value="10" id="sl-pw" oninput="onPW(this.value)">
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-lbl">Output Voltage <span class="ctrl-val" id="lbl-v">5.0 V</span></div>
+        <input type="range" min="10" max="100" value="50" id="sl-v" oninput="onV(this.value)">
+      </div>
+
+      <div class="panel-head" style="margin-top:4px">Heart Condition</div>
+      <button class="mode-btn active" id="cb-normal" onclick="setCond('normal')">
+        <div class="mode-btn-n" style="color:var(--accent2)">Normal Sinus Rhythm</div>
+      </button>
+      <button class="mode-btn" id="cb-brady" onclick="setCond('brady')">
+        <div class="mode-btn-n" style="color:var(--warn)">Bradycardia (&lt;60 BPM)</div>
+      </button>
+      <button class="mode-btn" id="cb-av" onclick="setCond('av')">
+        <div class="mode-btn-n" style="color:var(--accent3)">AV Block</div>
+      </button>
+    </div>
+
+    <!-- CANVAS -->
+    <div class="canvas-area">
+      <div class="canvas-label" id="canvas-label">ANTERIOR VIEW — 3D HEART MODEL</div>
+      <canvas id="heart-canvas"></canvas>
+      <div class="view-bar">
+        <button class="vbtn active" onclick="setView('anterior',this)">Anterior</button>
+        <button class="vbtn" onclick="setView('cross',this)">Cross-Section</button>
+        <button class="vbtn" onclick="setView('device',this)">Device</button>
+        <button class="vbtn" onclick="setView('lead',this)">Lead Path</button>
+      </div>
+    </div>
+
+    <!-- RIGHT READINGS -->
+    <div class="lab-panel">
+      <div class="panel-head">Live Readings</div>
+      <div class="readings-grid">
+        <div class="rd"><div class="rd-name">Heart Rate</div><div class="rd-val ok" id="r-hr">72 BPM</div></div>
+        <div class="rd"><div class="rd-name">Output V</div><div class="rd-val ok" id="r-v">5.0 V</div></div>
+        <div class="rd"><div class="rd-name">Pulse Width</div><div class="rd-val ok" id="r-pw">1.0 ms</div></div>
+        <div class="rd"><div class="rd-name">Mode</div><div class="rd-val ok" id="r-mode">DEMAND</div></div>
+        <div class="rd"><div class="rd-name">R-Wave</div><div class="rd-val ok" id="r-rw">DETECTED</div></div>
+        <div class="rd"><div class="rd-name">Refractory</div><div class="rd-val ok">250 ms</div></div>
+      </div>
+
+      <!-- ── PACEMAKER TOGGLE ── -->
+      <div class="pacer-row">
+        <span class="pacer-row-lbl">Pacemaker Active</span>
+        <label class="toggle-sw">
+          <input type="checkbox" id="pacer-toggle" onchange="onPacerToggle()">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+        <span class="pacer-on-lbl off" id="pacer-on-lbl">OFF</span>
+      </div>
+
+      <!-- ── CORRECTION PANEL ── -->
+      <div class="corr-panel" id="corr-panel">
+        <div class="corr-row">
+          <div class="corr-box before">
+            <div class="cb-lbl">Arrhythmia</div>
+            <div class="cb-val" id="corr-before">40</div>
+          </div>
+          <div class="corr-arr">→</div>
+          <div class="corr-box after">
+            <div class="cb-lbl">Target (Normal)</div>
+            <div class="cb-val" id="corr-after">72</div>
+          </div>
+        </div>
+        <div class="corr-live-bpm">
+          <span>Live:</span>
+          <div class="corr-bpm-bar"><div class="corr-bpm-fill" id="corr-fill" style="width:50%"></div></div>
+          <span class="corr-bpm-txt" id="corr-live-txt">72 BPM</span>
+        </div>
+        <div class="corr-desc" id="corr-desc">Pacemaker delivering pulses — rate normalizing toward 60–100 BPM.</div>
+      </div>
+
+      <div class="panel-head" style="margin-top:12px">Signal Flow</div>
+      <div class="sig-flow" id="sig-flow">
+        <div class="sig-step lit" data-i="0"><div class="sdot"></div><div class="stxt">ECG Amplifier — Gain ×10</div></div>
+        <div class="sarrow">↓</div>
+        <div class="sig-step" data-i="1"><div class="sdot"></div><div class="stxt">QRS Bandpass Filter 22–45 Hz</div></div>
+        <div class="sarrow">↓</div>
+        <div class="sig-step" data-i="2"><div class="sdot"></div><div class="stxt">R-Wave Detector 15–30 Hz</div></div>
+        <div class="sarrow">↓</div>
+        <div class="sig-step" data-i="3"><div class="sdot"></div><div class="stxt">Sync Generator resets oscillator</div></div>
+        <div class="sarrow">↓</div>
+        <div class="sig-step" data-i="4"><div class="sdot"></div><div class="stxt">Refractory period 250 ms</div></div>
+        <div class="sarrow">↓</div>
+        <div class="sig-step" data-i="5"><div class="sdot"></div><div class="stxt">Pulse Width Control 0.1–2.1 ms</div></div>
+        <div class="sarrow">↓</div>
+        <div class="sig-step" data-i="6"><div class="sdot"></div><div class="stxt">Amplitude Control → 5V out</div></div>
+        <div class="sarrow">↓</div>
+        <div class="sig-step" data-i="7"><div class="sdot"></div><div class="stxt">Lead delivers pulse to heart</div></div>
+      </div>
+
+      <div id="cond-info" style="margin-top:12px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.6">
+        <strong style="color:var(--accent2);display:block;margin-bottom:4px">Normal Sinus Rhythm</strong>
+        SA node fires at 60–100 BPM. Pacemaker in standby.
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider" style="margin-top:60px">
+
+<!-- ─── THEORY ─── -->
+<div id="section-theory" class="section">
+  <h2 class="section-title">Pacemaker Theory</h2>
+  <p class="section-sub">Core concepts from Ex. No. 2 — Study of Working Principle of Pacemaker</p>
+
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-title">What is a Pacemaker?</div>
+      <div class="card-body">An electronic device with a battery, circuits, and memory that generates pacing pulses carried via insulated lead wires to the heart — making the muscle beat at a normal rhythm.<br><br><span class="tag tag-blue">Output: 5V pulse / 10ms</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Primary Indication</div>
+      <div class="card-body">Bradycardia — an abnormally slow heart rate — is the most frequent reason for pacemaker implantation. The device detects slow rates and compensates with precisely timed electrical stimulation.<br><br><span class="tag tag-red">Threshold &lt; 60 BPM</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Demand Pacemaker</div>
+      <div class="card-body">Monitors ECG activity. When the rate drops or a beat is missed, it delivers a pulse. The escape interval equals the time between the last intrinsic beat and the paced beat.<br><br><span class="tag tag-green">Most Common Type</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Fixed-Rate</div>
+      <div class="card-body">Discharges at a preset rate constantly, regardless of the heart's own electrical activity. Used when the natural rhythm is completely absent or unreliable.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Rate-Responsive</div>
+      <div class="card-body">Has activity sensors that automatically raise or lower the pacing rate to meet the body's metabolic demands during exercise or rest.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Clinical Applications</div>
+      <div class="card-body">• Sick Sinus Syndrome<br>• Atrioventricular (AV) Block<br>• Bradycardia &amp; Asystole<br>• Congestive Heart Failure (CRT)</div>
+    </div>
+  </div>
+
+  <div class="bdiag">
+    <div class="bdiag-title">Demand Pacemaker — Block Diagram</div>
+    <svg viewBox="0 0 820 310" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+      <defs>
+        <marker id="a" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L7,3z" fill="#1d2d46"/>
+        </marker>
+        <marker id="ac" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L7,3z" fill="#38bdf8"/>
+        </marker>
+        <marker id="ar" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L7,3z" fill="#f87171"/>
+        </marker>
+      </defs>
+      <g font-family="Inter,sans-serif" font-size="8.5" fill="#e2e8f0">
+        <!-- blocks -->
+        <rect x="8"   y="125" width="88" height="42" rx="7" fill="#152035" stroke="#1d2d46" stroke-width="1.5"/>
+        <text x="52"  y="142" text-anchor="middle" fill="#38bdf8" font-weight="600">ECG</text>
+        <text x="52"  y="154" text-anchor="middle" fill="#64748b">Amplifier</text>
+        <text x="52"  y="165" text-anchor="middle" fill="#64748b">Gain ×10</text>
+
+        <rect x="120" y="125" width="90" height="42" rx="7" fill="#152035" stroke="#1d2d46" stroke-width="1.5"/>
+        <text x="165" y="142" text-anchor="middle" fill="#38bdf8" font-weight="600">QRS Filter</text>
+        <text x="165" y="154" text-anchor="middle" fill="#64748b">Bandpass</text>
+        <text x="165" y="165" text-anchor="middle" fill="#64748b">22–45 Hz</text>
+
+        <rect x="235" y="125" width="90" height="42" rx="7" fill="#152035" stroke="#1d2d46" stroke-width="1.5"/>
+        <text x="280" y="142" text-anchor="middle" fill="#38bdf8" font-weight="600">QRS Det.</text>
+        <text x="280" y="154" text-anchor="middle" fill="#64748b">Detector</text>
+        <text x="280" y="165" text-anchor="middle" fill="#64748b">15–30 Hz</text>
+
+        <rect x="352" y="125" width="90" height="42" rx="7" fill="#152035" stroke="#1d2d46" stroke-width="1.5"/>
+        <text x="397" y="142" text-anchor="middle" fill="#38bdf8" font-weight="600">Sync Gen.</text>
+        <text x="397" y="154" text-anchor="middle" fill="#64748b">Resets</text>
+        <text x="397" y="165" text-anchor="middle" fill="#64748b">Oscillator</text>
+
+        <rect x="352" y="28"  width="90" height="42" rx="7" fill="#152035" stroke="#1d2d46" stroke-width="1.5"/>
+        <text x="397" y="44"  text-anchor="middle" fill="#38bdf8" font-weight="600">Oscillator</text>
+        <text x="397" y="56"  text-anchor="middle" fill="#64748b">Rate Control</text>
+        <text x="397" y="67"  text-anchor="middle" fill="#64748b">Clock Reset</text>
+
+        <rect x="470" y="28"  width="90" height="42" rx="7" fill="#152035" stroke="#1d2d46" stroke-width="1.5"/>
+        <text x="515" y="44"  text-anchor="middle" fill="#38bdf8" font-weight="600">Refractory</text>
+        <text x="515" y="56"  text-anchor="middle" fill="#64748b">Generator</text>
+        <text x="515" y="67"  text-anchor="middle" fill="#64748b">250 ms</text>
+
+        <rect x="470" y="125" width="90" height="42" rx="7" fill="#152035" stroke="#1d2d46" stroke-width="1.5"/>
+        <text x="515" y="142" text-anchor="middle" fill="#38bdf8" font-weight="600">Pulse Width</text>
+        <text x="515" y="154" text-anchor="middle" fill="#64748b">Control</text>
+        <text x="515" y="165" text-anchor="middle" fill="#64748b">0.1–2.1 ms</text>
+
+        <rect x="588" y="125" width="90" height="42" rx="7" fill="#152035" stroke="#1d2d46" stroke-width="1.5"/>
+        <text x="633" y="142" text-anchor="middle" fill="#38bdf8" font-weight="600">Amplitude</text>
+        <text x="633" y="154" text-anchor="middle" fill="#64748b">Control</text>
+        <text x="633" y="165" text-anchor="middle" fill="#64748b">Output 5V</text>
+
+        <rect x="700" y="230" width="90" height="42" rx="7" fill="#1c0a0a" stroke="#f87171" stroke-width="1.5"/>
+        <text x="745" y="246" text-anchor="middle" fill="#f87171" font-weight="600">HEART</text>
+        <text x="745" y="258" text-anchor="middle" fill="#64748b">via Lead</text>
+        <text x="745" y="269" text-anchor="middle" fill="#64748b">Wire</text>
+
+        <rect x="8"   y="230" width="88" height="42" rx="7" fill="#152035" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="52"  y="246" text-anchor="middle" fill="#fbbf24" font-weight="600">Patient Sim</text>
+        <text x="52"  y="258" text-anchor="middle" fill="#64748b">Brady/Tachy</text>
+        <text x="52"  y="269" text-anchor="middle" fill="#64748b">AV Block</text>
+      </g>
+      <!-- main path arrows -->
+      <line x1="96"  y1="146" x2="118" y2="146" stroke="#1d2d46" stroke-width="1.5" marker-end="url(#a)"/>
+      <line x1="210" y1="146" x2="233" y2="146" stroke="#1d2d46" stroke-width="1.5" marker-end="url(#a)"/>
+      <line x1="325" y1="146" x2="350" y2="146" stroke="#1d2d46" stroke-width="1.5" marker-end="url(#a)"/>
+      <line x1="442" y1="146" x2="468" y2="146" stroke="#1d2d46" stroke-width="1.5" marker-end="url(#a)"/>
+      <line x1="560" y1="146" x2="586" y2="146" stroke="#1d2d46" stroke-width="1.5" marker-end="url(#a)"/>
+      <!-- sync→osc (up) -->
+      <line x1="397" y1="125" x2="397" y2="72"  stroke="#38bdf8" stroke-width="1.5" marker-end="url(#ac)"/>
+      <!-- osc→refr -->
+      <line x1="442" y1="49"  x2="468" y2="49"  stroke="#38bdf8" stroke-width="1.5" marker-end="url(#ac)"/>
+      <!-- refr→pw (down) -->
+      <line x1="515" y1="70"  x2="515" y2="123" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#ac)"/>
+      <!-- amp→heart -->
+      <line x1="633" y1="167" x2="745" y2="228" stroke="#f87171" stroke-width="1.5" marker-end="url(#ar)"/>
+      <!-- feedback dashed -->
+      <path d="M700 251 Q610 295 300 295 Q52 295 52 274" fill="none" stroke="#f87171" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ar)"/>
+      <text x="380" y="306" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#64748b">ECG Feedback Signal</text>
+      <!-- patient sim to ecg -->
+      <line x1="96"  y1="251" x2="120" y2="251" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="120" y1="251" x2="120" y2="168" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#a)"/>
+    </svg>
+  </div>
+
+  <div class="cards-grid" style="margin-top:20px">
+    <div class="card">
+      <div class="card-title">QRS Filter Specs</div>
+      <div class="card-body">Bandpass: 22–45 Hz · Gain ×10<br>Input: 1V peak-to-peak<br>Output: 5V · Range: 15–30 Hz<br>Selectively isolates QRS complex from noise.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Refractory Generator</div>
+      <div class="card-body">Non-retriggerable monostable multivibrator. Generates 250 ms "blind" period after each output pulse or sensed R-wave — prevents sensing T-waves as new beats.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Paced Output</div>
+      <div class="card-body">5V amplitude · Duration set by pulse width control (0.1–2.1 ms). Delivered to heart via lead wire. Also fed back to ECG amplifier as reference signal.</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ─── AI TUTOR ─── -->
+<div id="section-ai">
+  <h2 class="section-title">AI Tutor</h2>
+  <p class="section-sub">Ask anything about pacemakers, cardiac physiology, or the lab content. Powered by Claude.</p>
+
+  <div class="ai-card">
+    <div class="ai-header">
+      <div class="ai-avatar">🤖</div>
+      <div>
+        <div class="ai-name">Pacemaker AI Tutor</div>
+        <div class="ai-desc">Specialised in cardiac biomedical instrumentation · Ex. No. 2</div>
+      </div>
+      <div style="margin-left:auto"><div class="live-dot"></div></div>
+    </div>
+
+    <div class="ai-messages" id="ai-msgs">
+      <div class="msg assistant">
+        <div class="msg-av">🤖</div>
+        <div class="msg-bubble">
+          Hello! I'm your pacemaker tutor. I can explain how the demand pacemaker circuit works, the role of each block, clinical conditions like bradycardia and AV block, or help you prepare for your lab viva. What would you like to know?
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-chips">
+      <button class="chip" onclick="quickAsk('What is the escape interval in a demand pacemaker?')">Escape interval</button>
+      <button class="chip" onclick="quickAsk('Explain the refractory period and why it matters.')">Refractory period</button>
+      <button class="chip" onclick="quickAsk('What is the difference between bradycardia and AV block?')">Brady vs AV block</button>
+      <button class="chip" onclick="quickAsk('How does the QRS filter work?')">QRS filter</button>
+      <button class="chip" onclick="quickAsk('What is cardiac resynchronization therapy?')">CRT therapy</button>
+    </div>
+
+    <div class="ai-input-row">
+      <input class="ai-input" id="ai-input" type="text" placeholder="Ask about pacemakers, ECG, or lab theory…" onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="ai-send" id="ai-send" onclick="sendMsg()">Send →</button>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ─── QUIZ ─── -->
+<div id="section-quiz" class="section">
+  <h2 class="section-title">Knowledge Check</h2>
+  <p class="section-sub">Test your understanding of Ex. No. 2 material</p>
+  <div class="quiz-wrap">
+    <div id="quiz-questions"></div>
+    <div class="score-card" id="score-card">
+      <div class="score-big" id="score-big">0/6</div>
+      <div class="score-lbl">Questions Correct</div>
+      <div class="score-msg" id="score-msg"></div>
+      <button class="btn-primary" style="margin-top:24px;display:inline-block" onclick="buildQuiz()">Retry Quiz</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>Virtual Pacemaker Lab · Ex. No. 2 — Study of Working Principle of Pacemaker<br>
+  Built for biomedical engineering education · Interactive simulation with AI-powered tutor</p>
+</footer>
+
+<script>
+// ─── NAV ───
+function setNavActive(el){
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ─── STATE ───
+let bpm=72, volt=5.0, pw=1.0, mode='demand', cond='normal', view='anterior';
+let ecgT=0, beatP=0, sigStep=0, sigTimer=0;
+
+// ─── PACEMAKER CORRECTION STATE ───
+let pacerOn=false;
+let displayBPM=72;      // smoothly animated current BPM
+let targetBPM=72;       // what BPM should be right now
+
+// BPM of each condition WITHOUT pacemaker
+const condBPMbase={normal:72, brady:38, av:44};
+// BPM WITH pacemaker correcting
+const condBPMcorrected={normal:72, brady:72, av:70};
+
+// ─── ECG ───
+const ecgC=document.getElementById('ecg-mini');
+const ecgX=ecgC.getContext('2d');
+
+function ecgShape(ph){
+  if(ph<.08) return Math.sin(ph/.08*Math.PI)*.22;
+  if(ph<.12) return 0;
+  if(ph<.14) return -Math.sin((ph-.12)/.02*Math.PI)*.3;
+  if(ph<.18) return Math.sin((ph-.14)/.04*Math.PI);
+  if(ph<.22) return -Math.sin((ph-.18)/.04*Math.PI)*.4;
+  if(ph<.35) return .1;
+  if(ph<.5)  return Math.sin((ph-.35)/.15*Math.PI)*.35;
+  return 0;
+}
+
+function getECGPt(t){
+  const drawBPM=displayBPM||bpm;
+  const period=60000/drawBPM;
+  const ph=(t%period)/period;
+  // If pacemaker is on and correcting arrhythmia, show paced (blue spike) waveform
+  if(pacerOn && cond!=='normal'){
+    // Narrow paced spike then normal QRST
+    if(ph<.03) return ph/.03*.9; // pacing spike
+    return ecgShape(ph)*.85;
+  }
+  if(cond==='brady') return ecgShape((t%(60000/38))/(60000/38))*.5;
+  if(cond==='av'){
+    const p=(t%(60000/44))/(60000/44);
+    if(p<.05) return Math.sin(p/.05*Math.PI)*.3;
+    if(p>.5&&p<.52) return 1;
+    return 0;
+  }
+  return ecgShape(ph);
+}
+
+function drawECG(){
+  const w=ecgC.offsetWidth||300, h=44;
+  ecgC.width=w; ecgC.height=h;
+  ecgX.fillStyle='#0e1624'; ecgX.fillRect(0,0,w,h);
+  ecgX.strokeStyle='#1d2d46'; ecgX.lineWidth=.5;
+  for(let x=0;x<w;x+=20){ecgX.beginPath();ecgX.moveTo(x,0);ecgX.lineTo(x,h);ecgX.stroke()}
+  // Color: green=normal, red=arrhythmia, blue=pacemaker correcting
+  const ecgColor = pacerOn && cond!=='normal' ? '#38bdf8'
+    : (cond!=='normal' ? '#f87171' : '#34d399');
+  ecgX.strokeStyle=ecgColor; ecgX.lineWidth=1.5;
+  ecgX.shadowColor=ecgColor; ecgX.shadowBlur=5;
+  ecgX.beginPath();
+  const n=280;
+  for(let i=0;i<n;i++){
+    const t=ecgT-(n-i)*4;
+    const y=getECGPt(t);
+    const px=(i/n)*w, py=h/2-y*(h*.4);
+    i===0?ecgX.moveTo(px,py):ecgX.lineTo(px,py);
+  }
+  ecgX.stroke(); ecgX.shadowBlur=0;
+}
+
+// ─── 3D HEART ───
+const hC=document.getElementById('heart-canvas');
+const hX=hC.getContext('2d');
+
+function rr(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
+function drawHeart(){
+  const W=hC.offsetWidth||600, H=hC.offsetHeight||400;
+  hC.width=W; hC.height=H;
+  const cx=W/2, cy=H/2;
+  const beat=Math.max(0,(Math.sin(beatP)-.65)*2.85);
+  const sc=1+beat*.06;
+  if(view==='anterior') drawAnterior(cx,cy,sc,beat,W,H);
+  else if(view==='cross') drawCross(cx,cy,sc,beat,W,H);
+  else if(view==='device') drawDevice(cx,cy,beat,W,H);
+  else drawLead(cx,cy,beat,W,H);
+}
+
+function drawAnterior(cx,cy,sc,beat,W,H){
+  const r=Math.min(W,H)*.27*sc;
+  // glow
+  const g=hX.createRadialGradient(cx,cy,0,cx,cy,r*1.5);
+  g.addColorStop(0,`rgba(229,62,62,${.1+beat*.08})`);g.addColorStop(1,'rgba(229,62,62,0)');
+  hX.fillStyle=g;hX.fillRect(0,0,W,H);
+  // RV
+  hX.beginPath();hX.ellipse(cx-r*.25,cy+r*.1,r*.55,r*.75,-.2,0,Math.PI*2);
+  hX.fillStyle='#6b1a1a';hX.fill();hX.strokeStyle='#c53030';hX.lineWidth=2;hX.stroke();
+  // LV
+  hX.beginPath();hX.ellipse(cx+r*.2,cy+r*.15,r*.45,r*.7,.25,0,Math.PI*2);
+  hX.fillStyle='#8b2030';hX.fill();hX.strokeStyle='#e53e3e';hX.lineWidth=2;hX.stroke();
+  // RA
+  hX.beginPath();hX.ellipse(cx-r*.55,cy-r*.4,r*.32,r*.38,-.3,0,Math.PI*2);
+  hX.fillStyle='#7c2d12';hX.fill();hX.strokeStyle='#c05621';hX.lineWidth=1.5;hX.stroke();
+  // LA
+  hX.beginPath();hX.ellipse(cx+r*.45,cy-r*.45,r*.28,r*.35,.3,0,Math.PI*2);
+  hX.fillStyle='#831843';hX.fill();hX.strokeStyle='#be185d';hX.lineWidth=1.5;hX.stroke();
+  // Aorta
+  hX.beginPath();hX.moveTo(cx+r*.1,cy-r*.7);hX.bezierCurveTo(cx+r*.3,cy-r*1.2,cx-r*.4,cy-r*1.3,cx-r*.5,cy-r*.9);
+  hX.strokeStyle='#fc8181';hX.lineWidth=r*.12;hX.lineCap='round';hX.stroke();
+  // Pulmonary
+  hX.beginPath();hX.moveTo(cx-r*.1,cy-r*.65);hX.bezierCurveTo(cx-r*.2,cy-r*1.1,cx-r*.7,cy-r*1.0,cx-r*.75,cy-r*.7);
+  hX.strokeStyle='#90cdf4';hX.lineWidth=r*.09;hX.stroke();
+  // SA node
+  const sx=cx-r*.5,sy=cy-r*.62;
+  hX.beginPath();hX.arc(sx,sy,5,0,Math.PI*2);
+  hX.fillStyle=beat>.3?'#fff':'#fbbf24';hX.shadowColor='#fbbf24';hX.shadowBlur=beat>.3?18:5;hX.fill();hX.shadowBlur=0;
+  hX.font='10px Inter';hX.fillStyle='#fbbf24';hX.fillText('SA Node',sx+8,sy+4);
+  // Lead if pacing
+  if(mode!=='demand'||cond!=='normal'){
+    const lx=cx+r*.3,ly=cy+r*.4;
+    hX.beginPath();hX.moveTo(cx-r*1.4,cy-r*.8);
+    hX.bezierCurveTo(cx-r*.8,cy-r*.4,cx,cy-.05*r,lx,ly);
+    hX.strokeStyle=beat>.3?'#38bdf8':'#1e4a6b';hX.lineWidth=2;hX.stroke();
+    hX.beginPath();hX.arc(lx,ly,4,0,Math.PI*2);
+    hX.fillStyle=beat>.3?'#38bdf8':'#0a3d5e';hX.shadowColor='#38bdf8';hX.shadowBlur=beat>.3?14:3;hX.fill();hX.shadowBlur=0;
+    const dx=cx-r*1.65,dy=cy-r*1.05;
+    rr(hX,dx,dy,56,36,8);hX.fillStyle='#152035';hX.fill();hX.strokeStyle='#38bdf8';hX.lineWidth=1.5;hX.stroke();
+    hX.font='9px JetBrains Mono,monospace';hX.fillStyle='#38bdf8';hX.fillText('PACE',dx+9,dy+14);
+    hX.fillStyle='#64748b';hX.fillText(bpm+' BPM',dx+4,dy+27);
+  }
+  // Labels
+  hX.font='10px Inter';hX.fillStyle='rgba(200,200,200,.55)';
+  hX.fillText('RA',cx-r*.58,cy-r*.36);hX.fillText('LA',cx+r*.38,cy-r*.42);
+  hX.fillText('RV',cx-r*.3,cy+r*.25);hX.fillText('LV',cx+r*.22,cy+r*.3);
+}
+
+function drawCross(cx,cy,sc,beat,W,H){
+  const r=Math.min(W,H)*.29*sc;
+  hX.beginPath();hX.ellipse(cx,cy,r,r*.85,0,0,Math.PI*2);
+  hX.fillStyle='#5c1717';hX.fill();hX.strokeStyle='#e53e3e';hX.lineWidth=2;hX.stroke();
+  hX.beginPath();
+  hX.moveTo(cx-.05*r,cy-r*.85);hX.bezierCurveTo(cx-.1*r,cy-.3*r,cx+.05*r,cy+.3*r,cx,cy+r*.85);
+  hX.strokeStyle='#b91c1c';hX.lineWidth=r*.08;hX.stroke();
+  hX.beginPath();hX.ellipse(cx-r*.38,cy+r*.05,r*.35,r*.5,-.1,0,Math.PI*2);hX.fillStyle='#380a0a';hX.fill();
+  hX.beginPath();hX.ellipse(cx+r*.3,cy+r*.1,r*.28,r*.45,.1,0,Math.PI*2);hX.fillStyle='#380a0a';hX.fill();
+  if(beat>.1){
+    const bg=hX.createRadialGradient(cx,cy,0,cx,cy,r);
+    bg.addColorStop(0,`rgba(251,191,36,${Math.min(beat*.5,.35)})`);bg.addColorStop(1,'rgba(251,191,36,0)');
+    hX.fillStyle=bg;hX.beginPath();hX.ellipse(cx,cy,r,r*.85,0,0,Math.PI*2);hX.fill();
+  }
+  hX.font='10px Inter';hX.fillStyle='rgba(200,200,200,.6)';
+  hX.fillText('Right Ventricle',cx-r*.58,cy+.1*r);hX.fillText('Left Ventricle',cx+r*.1,cy+.12*r);
+  hX.fillText('Interventricular Septum',cx-r*.4,cy-r*.62);
+  hX.font='11px Inter';hX.fillStyle='#38bdf8';hX.fillText('Cross-Section — Ventricular Level',cx-150,28);
+}
+
+function drawDevice(cx,cy,beat,W,H){
+  rr(hX,cx-88,cy-108,176,216,28);hX.fillStyle='#1a2234';hX.fill();hX.strokeStyle='#b0bec5';hX.lineWidth=3;hX.stroke();
+  rr(hX,cx-68,cy-88,136,96,8);hX.fillStyle='#070c18';hX.fill();
+  hX.font='10px JetBrains Mono,monospace';
+  hX.fillStyle='#38bdf8';hX.fillText('MODE: '+mode.toUpperCase(),cx-58,cy-66);
+  hX.fillStyle='#34d399';hX.fillText('RATE: '+bpm+' BPM',cx-58,cy-50);
+  hX.fillStyle='#fbbf24';hX.fillText('VOLT: '+volt.toFixed(1)+' V',cx-58,cy-34);
+  hX.fillStyle='#64748b';hX.fillText('WIDTH: '+pw.toFixed(1)+' ms',cx-58,cy-18);
+  hX.fillStyle=beat>.3?'#34d399':'#1d2d46';hX.fillText('● PACING',cx-58,cy-2);
+  rr(hX,cx-48,cy+30,96,28,6);hX.fillStyle='#1d2d46';hX.fill();
+  rr(hX,cx-44,cy+34,76,20,4);hX.fillStyle='#34d399';hX.fill();
+  hX.font='9px Inter';hX.fillStyle='#000';hX.fillText('BATTERY 87%',cx-36,cy+48);
+  hX.fillStyle='#b0bec5';hX.fillRect(cx-7,cy+106,14,22);
+  hX.beginPath();hX.moveTo(cx,cy+128);hX.lineTo(cx,cy+175);
+  hX.strokeStyle=beat>.3?'#38bdf8':'#1d2d46';hX.lineWidth=3;hX.stroke();
+  hX.font='11px Inter';hX.fillStyle='#64748b';hX.fillText('Implantable Pulse Generator (IPG)',cx-130,cy-122);
+}
+
+function drawLead(cx,cy,beat,W,H){
+  const r=Math.min(W,H)*.19;
+  hX.beginPath();hX.ellipse(cx+r*.5,cy+r*.3,r*.8,r,0,0,Math.PI*2);
+  hX.fillStyle='rgba(107,26,26,.4)';hX.fill();hX.strokeStyle='#e53e3e';hX.lineWidth=1.5;hX.stroke();
+  rr(hX,cx-r*2.2,cy-r*.5,68,48,10);hX.fillStyle='#152035';hX.fill();hX.strokeStyle='#b0bec5';hX.lineWidth=2;hX.stroke();
+  hX.font='10px JetBrains Mono,monospace';hX.fillStyle='#38bdf8';hX.fillText('IPG',cx-r*2.0,cy-r*.12);
+  hX.beginPath();hX.moveTo(cx-r*1.52,cy-r*.25);
+  hX.bezierCurveTo(cx-r*.8,cy-r*.2,cx-r*.1,cy-r*.5,cx+r*.15,cy-r*.4);
+  hX.strokeStyle=beat>.3?'#38bdf8':'#1e4a6b';hX.lineWidth=3;hX.stroke();
+  hX.beginPath();hX.moveTo(cx-r*1.52,cy+.02*r);
+  hX.bezierCurveTo(cx-r*.5,cy+r*.1,cx+r*.2,cy+r*.5,cx+r*.55,cy+r*.6);
+  hX.strokeStyle=beat>.3?'#f87171':'#5c1111';hX.lineWidth=3;hX.stroke();
+  [[cx+r*.15,cy-r*.4,'#38bdf8','RA Tip'],[cx+r*.55,cy+r*.6,'#f87171','RV Tip']].forEach(([x,y,c,l])=>{
+    hX.beginPath();hX.arc(x,y,5,0,Math.PI*2);hX.fillStyle=c;hX.shadowColor=c;
+    hX.shadowBlur=beat>.3?14:4;hX.fill();hX.shadowBlur=0;
+    hX.font='10px Inter';hX.fillStyle=c;hX.fillText(l,x+8,y+4);
+  });
+  hX.beginPath();hX.moveTo(cx-r*1.52,cy-r*.25);
+  hX.bezierCurveTo(cx-r*1.8,cy-r*.7,cx-r*.8,cy-r*1.4,cx-r*.2,cy-r*1.2);
+  hX.strokeStyle='#1d2d46';hX.lineWidth=8;hX.setLineDash([5,4]);hX.stroke();hX.setLineDash([]);
+  hX.font='9px Inter';hX.fillStyle='#3a5a8a';hX.fillText('Subclavian Vein',cx-r*1.75,cy-r*1.32);
+  hX.font='11px Inter';hX.fillStyle='#38bdf8';hX.fillText('Lead Path — Transvenous Implantation',cx-160,28);
+}
+
+// ─── ANIMATION LOOP ───
+function loop(){
+  // Smooth BPM interpolation toward target
+  const diff=targetBPM-displayBPM;
+  if(Math.abs(diff)>0.4) displayBPM+=diff*0.04;
+  else displayBPM=targetBPM;
+
+  ecgT+=16; beatP=(ecgT/1000)*(displayBPM/60)*Math.PI*2;
+  drawECG(); drawHeart();
+  sigTimer+=16;
+  if(sigTimer>380){
+    const steps=document.querySelectorAll('.sig-step');
+    steps.forEach((s,i)=>s.classList.toggle('lit',i===sigStep));
+    sigStep=(sigStep+1)%steps.length;
+    sigTimer=0;
+  }
+  const shownBPM=Math.round(displayBPM);
+  document.getElementById('bpm-display').textContent=shownBPM;
+  document.getElementById('volt-display').textContent=volt.toFixed(1);
+
+  // Update range needle
+  updateRangeUI(shownBPM);
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ─── RANGE BAR UI ───
+function bpmToPercent(b){
+  if(b<=40) return 2+(b/40)*10;
+  if(b<=60) return 12+(b-40)/20*6;   // 12%→18%
+  if(b<=100) return 18+(b-60)/40*37; // 18%→55%
+  if(b<=150) return 55+(b-100)/50*25; // 55%→80%
+  return 80+Math.min(15,(b-150)/50*15);
+}
+
+function updateRangeUI(shownBPM){
+  const needle=document.getElementById('hr-needle');
+  needle.style.left=bpmToPercent(shownBPM).toFixed(1)+'%';
+  needle.setAttribute('data-label',shownBPM+' BPM');
+
+  const inNormal=shownBPM>=60&&shownBPM<=100;
+  const isArrhythmia=cond!=='normal'&&!pacerOn;
+  const isCorrecting=pacerOn&&cond!=='normal'&&Math.abs(shownBPM-targetBPM)>2;
+  const isPaced=pacerOn&&cond!=='normal';
+
+  // needle color
+  needle.style.background=isCorrecting?'#38bdf8':isArrhythmia?'#f87171':'#fff';
+  needle.style.boxShadow=isCorrecting?'0 0 10px rgba(56,189,248,.9)':
+    isArrhythmia?'0 0 10px rgba(248,113,113,.8)':'0 0 10px rgba(255,255,255,.8)';
+
+  // status pill
+  const pill=document.getElementById('status-pill');
+  const pillTxt=document.getElementById('pill-txt');
+  if(isCorrecting){pill.className='status-pill pill-correcting';pillTxt.textContent='⚡ Correcting…';}
+  else if(isPaced&&inNormal){pill.className='status-pill pill-pacing';pillTxt.textContent='⚡ Paced — Normal';}
+  else if(isArrhythmia){pill.className='status-pill pill-arrhythmia';pillTxt.textContent=cond==='brady'?'⚠ Bradycardia':'⚠ AV Block';}
+  else{pill.className='status-pill pill-normal';pillTxt.textContent='● Normal Sinus Rhythm';}
+
+  // R-wave reading
+  const rwEl=document.getElementById('r-rw');
+  if(rwEl){rwEl.textContent=isArrhythmia?'MISSED':'DETECTED';rwEl.className='rd-val '+(isArrhythmia?'alert':'ok');}
+
+  // correction panel progress bar
+  if(pacerOn&&cond!=='normal'){
+    const startBPM=condBPMbase[cond];
+    const endBPM=condBPMcorrected[cond];
+    const progress=Math.min(100,Math.max(0,(shownBPM-startBPM)/(endBPM-startBPM)*100));
+    document.getElementById('corr-fill').style.width=progress+'%';
+    document.getElementById('corr-live-txt').textContent=shownBPM+' BPM';
+  }
+}
+
+// ─── PACEMAKER TOGGLE ───
+function onPacerToggle(){
+  pacerOn=document.getElementById('pacer-toggle').checked;
+  const lbl=document.getElementById('pacer-on-lbl');
+  lbl.textContent=pacerOn?'ON':'OFF';
+  lbl.className='pacer-on-lbl '+(pacerOn?'on':'off');
+  recalcTarget();
+  updateCorrPanel();
+}
+
+function recalcTarget(){
+  if(pacerOn&&cond!=='normal'){
+    targetBPM=condBPMcorrected[cond];
+  } else {
+    targetBPM=condBPMbase[cond];
+  }
+  // Also sync the rate slider to target when pacemaker corrects
+  if(pacerOn&&cond!=='normal'){
+    bpm=targetBPM;
+    document.getElementById('sl-rate').value=bpm;
+    document.getElementById('lbl-rate').textContent=bpm+' BPM';
+    document.getElementById('r-hr').textContent=bpm+' BPM';
+    document.getElementById('r-hr').className='rd-val ok';
+  }
+}
+
+function updateCorrPanel(){
+  const panel=document.getElementById('corr-panel');
+  if(pacerOn&&cond!=='normal'){
+    panel.classList.add('visible');
+    document.getElementById('corr-before').textContent=condBPMbase[cond];
+    document.getElementById('corr-after').textContent=condBPMcorrected[cond];
+    const msgs={
+      brady:'Pacemaker delivering ventricular pulses. Rate rising from bradycardic range back to normal 60–100 BPM.',
+      av:'Pacemaker bypassing blocked AV node and pacing ventricles directly. Coordinated rhythm being restored.',
+    };
+    document.getElementById('corr-desc').textContent=msgs[cond]||'';
+  } else {
+    panel.classList.remove('visible');
+  }
+}
+
+// ─── CONTROLS ───
+function onRate(v){
+  bpm=+v;
+  document.getElementById('lbl-rate').textContent=v+' BPM';
+  document.getElementById('bpm-display').textContent=v;
+  const el=document.getElementById('r-hr');
+  el.textContent=v+' BPM';
+  el.className='rd-val '+(v<60?'warn':v>100?'alert':'ok');
+}
+function onPW(v){
+  pw=(v*.1).toFixed(1);
+  document.getElementById('lbl-pw').textContent=pw+' ms';
+  document.getElementById('r-pw').textContent=pw+' ms';
+}
+function onV(v){
+  volt=(v*.1).toFixed(1);
+  document.getElementById('lbl-v').textContent=volt+' V';
+  document.getElementById('r-v').textContent=volt+' V';
+  document.getElementById('volt-display').textContent=volt;
+}
+function setMode(m){
+  mode=m;
+  ['demand','fixed','rr'].forEach(x=>document.getElementById('mb-'+x).classList.toggle('active',x===m));
+  document.getElementById('r-mode').textContent=m.toUpperCase();
+}
+function setCond(c){
+  cond=c;
+  ['normal','brady','av'].forEach(x=>document.getElementById('cb-'+x).classList.toggle('active',x===c));
+  const info=document.getElementById('cond-info');
+  const map={
+    normal:{title:'Normal Sinus Rhythm',text:'SA node fires at 60–100 BPM. Pacemaker in standby.',col:'#34d399'},
+    brady:{title:'⚠️ Bradycardia Detected',text:'Rate 38 BPM — SA node firing too slowly. Enable pacemaker to restore normal rhythm →',col:'#f87171'},
+    av:{title:'🚨 AV Block',text:'Rate 44 BPM — AV node conduction blocked. Enable pacemaker to pace ventricles →',col:'#fbbf24'},
+  };
+  const {title,text,col}=map[c];
+  info.innerHTML=`<strong style="color:${col};display:block;margin-bottom:4px">${title}</strong>${text}`;
+
+  // Reset pacemaker toggle when switching condition
+  pacerOn=false;
+  document.getElementById('pacer-toggle').checked=false;
+  document.getElementById('pacer-on-lbl').textContent='OFF';
+  document.getElementById('pacer-on-lbl').className='pacer-on-lbl off';
+
+  // Set base BPM for condition
+  const baseBPM=condBPMbase[c];
+  targetBPM=baseBPM;
+  displayBPM=baseBPM;
+  bpm=baseBPM;
+  document.getElementById('sl-rate').value=baseBPM;
+  document.getElementById('lbl-rate').textContent=baseBPM+' BPM';
+  document.getElementById('r-hr').textContent=baseBPM+' BPM';
+  document.getElementById('r-hr').className='rd-val '+(baseBPM<60?'alert':baseBPM>100?'warn':'ok');
+
+  updateCorrPanel();
+}
+function setView(v,btn){
+  view=v;
+  document.querySelectorAll('.vbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const labels={anterior:'ANTERIOR VIEW — 3D HEART MODEL',cross:'CROSS-SECTION — VENTRICULAR LEVEL',device:'DEVICE VIEW — PULSE GENERATOR',lead:'LEAD PATH — TRANSVENOUS ROUTE'};
+  document.getElementById('canvas-label').textContent=labels[v];
+}
+
+// ─── AI TUTOR ───
+const SYSTEM = `You are a specialist biomedical engineering tutor for a virtual pacemaker lab (Ex. No. 2 — Study of Working Principle of Pacemaker). You help students understand:
+- How cardiac pacemakers work (demand, fixed-rate, rate-responsive types)
+- The block diagram: ECG Amplifier → QRS Bandpass Filter (22–45 Hz, gain ×10) → QRS Detector (15–30 Hz) → Sync Generator → Oscillator → Refractory Generator (250ms non-retriggerable monostable multivibrator) → Pulse Width Control (0.1–2.1ms) → Amplitude Control (5V output) → Lead → Heart
+- Output specs: 5V, 10ms pulse
+- Conditions: bradycardia, AV block, sick sinus syndrome, tachycardia, asystole
+- SA/AV nodes, QRS complex, escape interval, refractory period
+- Internal vs external pacemakers, single/dual/triple chamber
+Keep answers clear, educational, concise (2–4 paragraphs max). Use simple language with technical accuracy. This is for biomedical engineering lab exam preparation.`;
+
+async function sendMsg(){
+  const inp=document.getElementById('ai-input');
+  const txt=inp.value.trim();
+  if(!txt)return;
+  inp.value='';
+  appendMsg('user',txt);
+  const typing=appendTyping();
+  document.getElementById('ai-send').disabled=true;
+
+  try{
+    const sample=await claude.use('sample');
+    if(!sample){appendMsg('assistant','AI Tutor requires sign-in to Claude. Please open this page while signed in to claude.ai.');typing.remove();document.getElementById('ai-send').disabled=false;return;}
+    const res=await sample([{role:'user',content:SYSTEM+'\n\nStudent question: '+txt}],{modelTier:'default'});
+    typing.remove();
+    appendMsg('assistant',res.text);
+  }catch(e){
+    typing.remove();
+    appendMsg('assistant','Sorry, I couldn\'t connect right now. Please try again in a moment.');
+  }
+  document.getElementById('ai-send').disabled=false;
+}
+
+function quickAsk(q){document.getElementById('ai-input').value=q;sendMsg();}
+
+function appendMsg(role,text){
+  const div=document.createElement('div');div.className='msg '+role;
+  const av=document.createElement('div');av.className='msg-av';av.textContent=role==='assistant'?'🤖':'👤';
+  const bub=document.createElement('div');bub.className='msg-bubble';bub.textContent=text;
+  div.appendChild(av);div.appendChild(bub);
+  const msgs=document.getElementById('ai-msgs');msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+  return div;
+}
+function appendTyping(){
+  const div=document.createElement('div');div.className='msg assistant';
+  const av=document.createElement('div');av.className='msg-av';av.textContent='🤖';
+  const bub=document.createElement('div');bub.className='msg-bubble';
+  bub.innerHTML='<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+  div.appendChild(av);div.appendChild(bub);
+  const msgs=document.getElementById('ai-msgs');msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+  return div;
+}
+
+// ─── QUIZ ───
+const Qs=[
+  {q:"What is the most frequent reason for pacemaker implantation?",opts:["Tachycardia","Bradycardia","Hypertension","Atrial flutter"],a:1,exp:"Bradycardia — an abnormally slow heartbeat — is the primary indication. The pacemaker compensates by delivering timed electrical pulses."},
+  {q:"What is the output voltage and pulse width of the pacemaker described in Ex. No. 2?",opts:["10V and 5ms","3.7V and 1ms","5V and 10ms","12V and 20ms"],a:2,exp:"The pacemaker outputs 5V with a 10ms pulse. The pulse width can be adjusted from 0.1–2.1ms via the pulse width control circuit."},
+  {q:"Which pacemaker type monitors heart activity and fires only when the rate drops below threshold?",opts:["Fixed-rate pacemaker","Rate-responsive pacemaker","Demand pacemaker","Asynchronous pacemaker"],a:2,exp:"The demand pacemaker monitors the ECG and activates only when needed. It resets its internal clock each time a QRS is detected."},
+  {q:"What is the frequency band of the QRS bandpass filter?",opts:["1–10 Hz","22–45 Hz","100–200 Hz","50–60 Hz"],a:1,exp:"The QRS filter is a bandpass filter with limits 22–45 Hz and a gain of 10, designed to selectively pass the QRS complex while rejecting other signals."},
+  {q:"How long is the refractory period generated after a paced output or sensed R-wave?",opts:["50 ms","100 ms","250 ms","500 ms"],a:2,exp:"The refractory generator is a non-retriggerable monostable multivibrator producing a 250ms delay. During this period the sensing amplifier ignores incoming signals to prevent false triggers."},
+  {q:"Which block resets the oscillator when an R-wave is sensed?",opts:["ECG Amplifier","Pulse Width Control","Sync Generator","Amplitude Control"],a:2,exp:"The Sync Generator synchronises with the QRS Detector. When an R-wave is detected it resets the oscillator, preventing an unnecessary pacing pulse."}
+];
+
+let answered=new Array(Qs.length).fill(false),score=0;
+
+function buildQuiz(){
+  answered=new Array(Qs.length).fill(false);score=0;
+  document.getElementById('score-card').style.display='none';
+  const cont=document.getElementById('quiz-questions');
+  cont.innerHTML='';
+  Qs.forEach((q,qi)=>{
+    const div=document.createElement('div');div.className='qcard';
+    div.innerHTML=`<div class="qnum">Q${qi+1} of ${Qs.length}</div>
+      <div class="qtext">${q.q}</div>
+      <div class="qopts">${q.opts.map((o,oi)=>`<button class="qopt" onclick="answer(${qi},${oi},this)">${o}</button>`).join('')}</div>
+      <div class="qfeedback" id="fb-${qi}">${q.exp}</div>`;
+    cont.appendChild(div);
+  });
+}
+
+function answer(qi,oi,btn){
+  if(answered[qi])return;
+  answered[qi]=true;
+  const opts=btn.parentElement.querySelectorAll('.qopt');
+  opts.forEach((o,i)=>{o.disabled=true;if(i===Qs[qi].a)o.classList.add('correct');else if(i===oi)o.classList.add('wrong');});
+  if(oi===Qs[qi].a)score++;
+  document.getElementById('fb-'+qi).style.display='block';
+  if(answered.every(Boolean)){
+    setTimeout(()=>{
+      const sc=document.getElementById('score-card');
+      document.getElementById('score-big').textContent=score+'/'+Qs.length;
+      const msgs=['Keep studying — review the block diagram carefully!','Good effort! Review the specs and signal flow.','Nice work! You understand the core concepts.','Excellent! You\'ve mastered pacemaker fundamentals.','Perfect score! Outstanding knowledge.'];
+      document.getElementById('score-msg').textContent=msgs[Math.floor(score/Qs.length*4)];
+      sc.style.display='block';sc.scrollIntoView({behavior:'smooth'});
+    },600);
+  }
+}
+
+buildQuiz();
+window.addEventListener('resize',()=>{drawECG();drawHeart();});
+</script>
+</body>
+</html>
